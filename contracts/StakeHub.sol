@@ -710,6 +710,9 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         if (!canSlash) revert AlreadySlashed();
         uint256 slashAmount = IStakeCredit(valInfo.creditContract).slash(felonySlashAmount);
         _jailValidator(valInfo, jailUntil);
+        // Evict using the post-rotation consensus key; SlashIndicator's voteAddr-based
+        // eviction covers the case where BSCValidatorSet has not yet synced K_new.
+        IBSCValidatorSet(VALIDATOR_CONTRACT_ADDR).felony(valInfo.consensusAddress);
 
         emit ValidatorSlashed(operatorAddress, jailUntil, slashAmount, SlashType.MaliciousVote);
 
@@ -744,6 +747,9 @@ contract StakeHub is SystemV2, Initializable, Protectable {
         if (!canSlash) revert AlreadySlashed();
         uint256 slashAmount = IStakeCredit(valInfo.creditContract).slash(felonySlashAmount);
         _jailValidator(valInfo, jailUntil);
+        // Evict using the post-rotation consensus key; SlashIndicator's felony(K_old)
+        // covers the case where BSCValidatorSet has not yet synced K_new.
+        IBSCValidatorSet(VALIDATOR_CONTRACT_ADDR).felony(valInfo.consensusAddress);
 
         emit ValidatorSlashed(operatorAddress, jailUntil, slashAmount, SlashType.DoubleSign);
 
